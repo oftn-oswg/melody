@@ -16,6 +16,7 @@ typedef unsigned int music_item_tempo_t;
 
 typedef struct music_item_note {
 	unsigned int id;
+	unsigned int frac;
 	unsigned int beats;
 } music_item_note_t;
 

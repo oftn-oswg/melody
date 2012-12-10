@@ -8,14 +8,14 @@ OBJ = ${SRC:.c=.o}
 
 .PHONY: all clean
 
-all: melody
+all: $(EXE)
 
 .c.o:
 	$(CC) -c $< $(CFLAGS)
 
 $(EXE): $(OBJ)
-	$(CC) $(OBJ) -o $(EXE) $(CFLAGS) $(LDFLAGS)
-	strip --strip-all $(EXE)
+	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS)
+	strip --strip-all $@
 
 clean:
 	-@rm -rf $(OBJ) $(EXE)

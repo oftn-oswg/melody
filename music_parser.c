@@ -8,7 +8,7 @@
 static music_item_t * music_item_new (music_item_type_t type, ...);
 static bool music_parse_unsigned_int (unsigned int *out, char **input);
 static bool music_parse_signed_int (int *out, char **input);
-static bool music_create_note (music_item_note_t *note, int octave, char letter, char modifier, unsigned int beats);
+static bool music_create_note (music_item_note_t *note, int octave, char letter, char modifier);
 static void music_item_push (music_item_t **head, music_item_t **tail, music_item_t **item);
 static music_item_t *music_item_parse (char **input);
 
@@ -105,7 +105,7 @@ static bool music_parse_signed_int (int *out, char **input) {
 	return success;
 }
 
-static bool music_create_note (music_item_note_t *note, int octave, char letter, char modifier, unsigned int beats) {
+static bool music_create_note (music_item_note_t *note, int octave, char letter, char modifier) {
 	static unsigned short int lookup[] = { 0, 2, 4, 5, 7, 9, 11 };
 
 	if (octave < -5 || octave > 5 || letter < 'A' || letter > 'G')
@@ -115,7 +115,6 @@ static bool music_create_note (music_item_note_t *note, int octave, char letter,
 		/* Octave shift */   (octave + 5) * 12 +
 		/* Note shift */     lookup[(letter >= 'C') ? (letter - 'C') : (letter + 5 - 'A')] +
 		/* Mofifier shift */ ((modifier == '+') ? 1 : (modifier == '-' ? -1 : 0));
-	note->beats = beats;
 	
 	return true;
 }
@@ -144,7 +143,7 @@ static music_item_t *music_item_parse (char **input) {
 	/* For parsing MUSIC_ITEM_NOTEs */
 	int octave = 0;
 	char letter = '\0', modifier = '\0';
-	unsigned int beats = 0;
+	unsigned int beats = 0, frac = 1;
 	music_item_note_t note;
 
 	/* Skip whitespace */
@@ -181,7 +180,9 @@ static music_item_t *music_item_parse (char **input) {
 			if (subitem) {
 				switch (subitem->type) {
 				case MUSIC_ITEM_TEMPO: break;
-				case MUSIC_ITEM_NOTE: beats += subitem->value.note.beats; break;
+				case MUSIC_ITEM_NOTE:
+					// TODO: Take fractional part of beat length into account.
+					beats += subitem->value.note.beats; break;
 				default:
 					beats++;
 				}
@@ -206,6 +207,7 @@ static music_item_t *music_item_parse (char **input) {
 			(*input)++;
 			modifier = '=';
 			beats = 1;
+			frac = 1;
 
 			if (**input == '-' || **input == '+') {
 				modifier = **input;
@@ -214,14 +216,29 @@ static music_item_t *music_item_parse (char **input) {
 
 			if (**input == ':') {
 				(*input)++;
-				if (!music_parse_unsigned_int (&beats, input))
-					PARSE_ERROR ("Expected number of beats after ':' marker.");
 
-				if (beats < 1)
+				if (**input == '/') {
+					(*input)++;
+					if (!music_parse_unsigned_int (&frac, input))
+						PARSE_ERROR ("Expected beat length after / marker.");
+				} else if (music_parse_unsigned_int (&beats, input)) {
+					if (**input == '/') {
+						(*input)++;
+						if (!music_parse_unsigned_int (&frac, input))
+							PARSE_ERROR ("Expected beat length after / marker.");
+					}
+				} else {
+					PARSE_ERROR ("Expected beat length after ':' marker.");
+				}
+
+				if (beats < 1 || frac < 1)
 					PARSE_ERROR ("Can not have a beat length of 0.");
 			}
 
-			if (!music_create_note (&note, octave, letter, modifier, beats))
+			note.beats = beats;
+			note.frac = frac;
+
+			if (!music_create_note (&note, octave, letter, modifier))
 				PARSE_ERROR ("Could not parse music note item.");
 
 			return music_item_new (MUSIC_ITEM_NOTE, note);

@@ -6,7 +6,7 @@
 
 #define SMF_NOTE_ON (0x90)
 #define SMF_NOTE_OFF (0x80)
-#define SMF_VELOCITY (127)
+#define SMF_VELOCITY (100)
 
 static bool music_generate_note (smf_track_t *track, music_item_tempo_t tempo, music_item_t *item, double *seconds) {
 	music_item_note_t note = item->value.note;
@@ -20,7 +20,7 @@ static bool music_generate_note (smf_track_t *track, music_item_tempo_t tempo, m
 	}
 
 	smf_track_add_event_seconds (track, noteon, *seconds);
-	*seconds += note.beats * 60.0 / tempo;
+	*seconds += (note.beats * 60.0) / (note.frac * tempo);
 	smf_track_add_event_seconds (track, noteoff, *seconds);
 	return true;
 }

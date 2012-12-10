@@ -11,6 +11,8 @@ Melody is a simple program to generate music from a string of text in order to q
 
     echo 'T160 1d 1g [1g 1b-] 1a 1f 1g 1d . 1d 1g [1g 1b-] 1a 1f 1g:3 1d 1g [1g 1b-] 1a 1f 1g 1d . 1g 1f:2 1d+ [1d+ 1c] 1d . . . 1d' | ./melody eboy_original.mid
 
+    echo 'T60 [ .. 2e 2e-] [2e 2e- T50 2e 1b] [2d 2c T65 1a 0e] [0a T70 1c 1e 1a] [1b 0e 0g+ 1e] [1g+ 1b 2c 0e] T55 [0a 1e T60 2e 2e-] [2e 2e- T50 2e 1b] [2d 2c T65 1a 0e] [0a T70 1c 1e 1a] [1b 0e 0g+ 1e] T70 2c:/4 1b:/4 1a:6' | ./melody furelise.mid && cvlc furelise.mid
+
 ## Commands
 
 <table>
