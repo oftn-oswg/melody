@@ -18,4 +18,4 @@ $(EXE): $(OBJ)
 	strip --strip-all $@
 
 clean:
-	-@rm -rf $(OBJ) $(EXE)
+	-@rm -rf $(OBJ) $(EXE) *.mid *.midi

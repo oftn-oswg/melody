@@ -7,8 +7,7 @@
 
 static music_item_t * music_item_new (music_item_type_t type, ...);
 static bool music_parse_unsigned_int (unsigned int *out, char **input);
-static bool music_parse_signed_int (int *out, char **input);
-static bool music_create_note (music_item_note_t *note, int octave, char letter, char modifier);
+static bool music_create_note (music_item_note_t *note, unsigned int octave, char letter, char modifier);
 static void music_item_push (music_item_t **head, music_item_t **tail, music_item_t **item);
 static music_item_t *music_item_parse (char **input);
 
@@ -88,33 +87,19 @@ static bool music_parse_unsigned_int (unsigned int *out, char **input) {
 	return true;
 }
 
-static bool music_parse_signed_int (int *out, char **input) {
-	bool success = false;
-	unsigned int part = 0;
-
-	if (**input == '-') {
-		*out = -1;
-		(*input)++;
-	} else {
-		*out = 1;
-	}
-
-	success = music_parse_unsigned_int (&part, input);
-	*out = *out * part;
-
-	return success;
-}
-
-static bool music_create_note (music_item_note_t *note, int octave, char letter, char modifier) {
+static bool music_create_note (music_item_note_t *note, unsigned int octave, char letter, char modifier) {
 	static unsigned short int lookup[] = { 0, 2, 4, 5, 7, 9, 11 };
 
-	if (octave < -5 || octave > 5 || letter < 'A' || letter > 'G')
+	if (octave > 9 || letter < 'A' || letter > 'G')
 		return false;
 
 	note->id =
-		/* Octave shift */   (octave + 5) * 12 +
+		/* Octave shift */   (octave + 1) * 12 +
 		/* Note shift */     lookup[(letter >= 'C') ? (letter - 'C') : (letter + 5 - 'A')] +
 		/* Mofifier shift */ ((modifier == '+') ? 1 : (modifier == '-' ? -1 : 0));
+
+	if (note->id > 127)
+		return false;
 	
 	return true;
 }
@@ -141,7 +126,7 @@ static music_item_t *music_item_parse (char **input) {
 	unsigned int tempo;
 
 	/* For parsing MUSIC_ITEM_NOTEs */
-	int octave = 0;
+	unsigned int octave = 0;
 	char letter = '\0', modifier = '\0';
 	unsigned int beats = 0, frac = 1;
 	music_item_note_t note;
@@ -202,7 +187,7 @@ static music_item_t *music_item_parse (char **input) {
 
 	/* MUSIC_ITEM_NOTE */
 	default:
-		if (music_parse_signed_int (&octave, input)) {
+		if (music_parse_unsigned_int (&octave, input)) {
 			letter = toupper (**input);
 			(*input)++;
 			modifier = '=';

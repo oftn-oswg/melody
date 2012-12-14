@@ -9,9 +9,9 @@ Melody is a simple program to generate music from a string of text in order to q
 
 ## Run
 
-    echo 'T160 1d 1g [1g 1b-] 1a 1f 1g 1d . 1d 1g [1g 1b-] 1a 1f 1g:3 1d 1g [1g 1b-] 1a 1f 1g 1d . 1g 1f:2 1d+ [1d+ 1c] 1d . . . 1d' | ./melody eboy_original.mid
-
-    echo 'T60 [ .. 2e 2e-] [2e 2e- T50 2e 1b] [2d 2c T65 1a 0e] [0a T70 1c 1e 1a] [1b 0e 0g+ 1e] [1g+ 1b 2c 0e] T55 [0a 1e T60 2e 2e-] [2e 2e- T50 2e 1b] [2d 2c T65 1a 0e] [0a T70 1c 1e 1a] [1b 0e 0g+ 1e] T70 2c:/4 1b:/4 1a:6' | ./melody furelise.mid && cvlc furelise.mid
+    echo 'T160 5d 5g [5g 5b-] 5a 5f 5g 5d . 5d 5g [5g 5b-] 5a 5f 5g:3 5d 5g [5g 5b-] 5a 5f 5g 5d . 5g 5f:2 5d+ [5d+ 5c] 5d . . . 5d' | ./melody eboy_original.mid
+    echo 'T60 [ .. 6e 6e-] [6e 6e- T50 6e 5b] [6d 6c T65 5a 4e] [4a T70 5c 5e 5a] [5b 4e 4g+ 5e] [5g+ 5b 6c 4e] T55 [4a 5e T60 6e 6e-] [6e 6e- T50 6e 5b] [6d 6c T65 5a 4e] [4a T70 5c 5e 5a] [5b 4e 4g+ 5e] T70 6c:/4 5b:/4 5a:6' | ./melody furelise.mid
+    echo 'T160 [6e 6d] 5f+ 5g+ [6c+ 5b] 5d 5e [5b 5a] 5c+ 5e 5a:2' | ./melody granvals.midi
 
 ## Commands
 
