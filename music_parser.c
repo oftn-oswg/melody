@@ -9,18 +9,20 @@ static music_item_t * music_item_new (music_item_type_t type, ...);
 static bool music_parse_unsigned_int (unsigned int *out, char **input);
 static bool music_create_note (music_item_note_t *note, unsigned int octave, char letter, char modifier);
 static void music_item_push (music_item_t **head, music_item_t **tail, music_item_t **item);
-static music_item_t *music_item_parse (char **input);
+static music_item_t *music_item_parse (char **input, unsigned int *octave);
 
 music_item_t * music_parse (char *input) {
 	music_item_t *head = NULL;
 	music_item_t *item = NULL;
 	music_item_t *tail = NULL;
 
+	unsigned int default_octave = 4;
+
 	if (!input)
 		return NULL;
 
 	do {
-		item = music_item_parse (&input);
+		item = music_item_parse (&input, &default_octave);
 		music_item_push (&head, &tail, &item);
 	} while (item);
 
@@ -73,11 +75,11 @@ static music_item_t * music_item_new (music_item_type_t type, ...) {
 }
 
 static bool music_parse_unsigned_int (unsigned int *out, char **input) {
-	*out = 0;
-
 	if (!isdigit (**input))
 		return false;
-	
+
+	*out = 0;
+
 	do {
 		*out *= 10;
 		*out += (**input - '0');
@@ -117,7 +119,7 @@ static void music_item_push (music_item_t **head, music_item_t **tail, music_ite
 	*tail = *item;
 }
 
-static music_item_t *music_item_parse (char **input) {
+static music_item_t *music_item_parse (char **input, unsigned int *octave) {
 	music_item_t *item = NULL;
 	music_item_t *subtail = NULL;
 	music_item_t *subitem = NULL;
@@ -126,7 +128,6 @@ static music_item_t *music_item_parse (char **input) {
 	unsigned int tempo;
 
 	/* For parsing MUSIC_ITEM_NOTEs */
-	unsigned int octave = 0;
 	char letter = '\0', modifier = '\0';
 	unsigned int beats = 0, frac = 1;
 	music_item_note_t note;
@@ -161,7 +162,7 @@ static music_item_t *music_item_parse (char **input) {
 		beats = 0;
 
 		do {
-			subitem = music_item_parse (input);
+			subitem = music_item_parse (input, octave);
 			if (subitem) {
 				switch (subitem->type) {
 				case MUSIC_ITEM_TEMPO: break;
@@ -187,48 +188,46 @@ static music_item_t *music_item_parse (char **input) {
 
 	/* MUSIC_ITEM_NOTE */
 	default:
-		if (music_parse_unsigned_int (&octave, input)) {
-			letter = toupper (**input);
+		music_parse_unsigned_int (octave, input);
+		
+		letter = toupper (**input);
+		(*input)++;
+		modifier = '=';
+		beats = 1;
+		frac = 1;
+
+		if (**input == '-' || **input == '+') {
+			modifier = **input;
 			(*input)++;
-			modifier = '=';
-			beats = 1;
-			frac = 1;
+		}
 
-			if (**input == '-' || **input == '+') {
-				modifier = **input;
+		if (**input == ':') {
+			(*input)++;
+
+			if (**input == '/') {
 				(*input)++;
-			}
-
-			if (**input == ':') {
-				(*input)++;
-
+				if (!music_parse_unsigned_int (&frac, input))
+					PARSE_ERROR ("Expected beat length after / marker.");
+			} else if (music_parse_unsigned_int (&beats, input)) {
 				if (**input == '/') {
 					(*input)++;
 					if (!music_parse_unsigned_int (&frac, input))
 						PARSE_ERROR ("Expected beat length after / marker.");
-				} else if (music_parse_unsigned_int (&beats, input)) {
-					if (**input == '/') {
-						(*input)++;
-						if (!music_parse_unsigned_int (&frac, input))
-							PARSE_ERROR ("Expected beat length after / marker.");
-					}
-				} else {
-					PARSE_ERROR ("Expected beat length after ':' marker.");
 				}
-
-				if (beats < 1 || frac < 1)
-					PARSE_ERROR ("Can not have a beat length of 0.");
+			} else {
+				PARSE_ERROR ("Expected beat length after ':' marker.");
 			}
 
-			note.beats = beats;
-			note.frac = frac;
-
-			if (!music_create_note (&note, octave, letter, modifier))
-				PARSE_ERROR ("Could not parse music note item.");
-
-			return music_item_new (MUSIC_ITEM_NOTE, note);
-		} else {
-			PARSE_ERROR ("Unexpected character in stream: '%c'", **input);
+			if (beats < 1 || frac < 1)
+				PARSE_ERROR ("Can not have a beat length of 0.");
 		}
+
+		note.beats = beats;
+		note.frac = frac;
+
+		if (!music_create_note (&note, *octave, letter, modifier))
+			PARSE_ERROR ("Could not parse music note item.");
+
+		return music_item_new (MUSIC_ITEM_NOTE, note);
 	}
 }
