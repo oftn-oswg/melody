@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -O3 -march=native -mtune=native -pipe `pkg-config --cflags smf`
+CFLAGS = -Wall -Werror -Wextra -pedantic -std=c99 -O3 -mtune=native -pipe `pkg-config --cflags smf`
 LDFLAGS = `pkg-config --libs smf`
 
 EXE = melody
@@ -15,7 +15,7 @@ all: $(EXE)
 
 $(EXE): $(OBJ)
 	$(CC) $^ -o $@ $(CFLAGS) $(LDFLAGS)
-	strip --strip-all $@
+	strip -x $@
 
 clean:
 	-@rm -rf $(OBJ) $(EXE) *.mid
