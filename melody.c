@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 #include "music.h"
 
@@ -31,20 +33,29 @@ static void music_item_print (music_item_t *item) {
 
 int main(int argc, char *argv[]) {
 	char buffer[BUFFER_SIZE];
-	char *filename;
+	char *filename = NULL;
+	int instr_id = 0;
 
-	if (argc < 2) {
-		fprintf (stderr, "Usage: %s filename.mid\n\n", argv[0]);
-		return 1;
+	/* Don't feel like using getopt or whatever */
+	for (int i = 1; i < argc; i++) {
+		if (strcmp (argv[i], "-i") == 0) {
+			i++;
+			instr_id = atoi (argv[i]);
+		} else {
+			filename = argv[i];
+		}
 	}
 
-	filename = argv[1];
+	if (!filename) {
+		fprintf (stderr, "Usage: %s [-i <instrument_number>] filename.mid\n\n", argv[0]);
+		return 1;
+	}
 
 	if (fgets (buffer, BUFFER_SIZE, stdin)) {
 		music_item_t *music = music_parse (buffer);
 		//music_item_print (music);
 		//putchar ('\n');
-		if (!music_generate (filename, 120, music))
+		if (!music_generate (filename, 120, music, instr_id))
 			fprintf (stderr, "Could not do music generation\n");
 
 		music_item_destroy (music);

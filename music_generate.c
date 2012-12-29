@@ -6,6 +6,7 @@
 
 #define SMF_NOTE_ON (0x90)
 #define SMF_NOTE_OFF (0x80)
+#define SMF_PROG_CHG (0xC0)
 #define SMF_VELOCITY (100)
 
 static bool music_generate_note (smf_track_t *track, music_item_tempo_t tempo, music_item_t *item, double *seconds) {
@@ -14,8 +15,8 @@ static bool music_generate_note (smf_track_t *track, music_item_tempo_t tempo, m
 	smf_event_t *noteoff = smf_event_new_from_bytes (SMF_NOTE_OFF, note.id, SMF_VELOCITY);
 
 	if (!noteon || !noteoff) {
-		if (!noteon) smf_event_delete (noteon);
-		if (!noteoff) smf_event_delete (noteoff);
+		if (noteon) smf_event_delete (noteon);
+		if (noteoff) smf_event_delete (noteoff);
 		return false;
 	}
 
@@ -62,12 +63,13 @@ static bool music_generate_sub (smf_track_t *track, music_item_tempo_t *base, mu
 	return true;
 }
 
-bool music_generate (const char *file, music_item_tempo_t tempo, music_item_t *sequence) {
+bool music_generate (const char *file, music_item_tempo_t tempo, music_item_t *sequence, int instr_id) {
 	double seconds = 0.0;
 
 	int ret;
 	smf_t *smf = NULL;
 	smf_track_t *track = NULL;
+	smf_event_t *instrument = NULL;
 
 	smf = smf_new ();
 	if (!smf)
@@ -80,6 +82,10 @@ bool music_generate (const char *file, music_item_tempo_t tempo, music_item_t *s
 	}
 
 	smf_add_track (smf, track);
+
+	instrument = smf_event_new_from_bytes (SMF_PROG_CHG, instr_id, -1);
+	if (instrument)
+		smf_track_add_event_seconds (track, instrument, seconds);
 
 	while (sequence) {
 		switch (sequence->type) {

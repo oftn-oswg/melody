@@ -39,7 +39,7 @@ typedef struct music_item {
 music_item_t * music_parse (char *input);
 void music_item_destroy (music_item_t *item);
 
-bool music_generate (const char *file, music_item_tempo_t tempo, music_item_t *sequence);
+bool music_generate (const char *file, music_item_tempo_t tempo, music_item_t *sequence, int instr_id);
 
 
 #endif
